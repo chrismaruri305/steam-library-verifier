@@ -11,7 +11,7 @@ Works on: Windows, macOS, Linux
 
 Author: Christopher & Claude AI (Anthropic)
 License: MIT
-Source: https://github.com/YOUR_USERNAME/steam-library-verifier
+Source: https://github.com/chrismaruri305/steam-library-verifier
 """
 
 import os

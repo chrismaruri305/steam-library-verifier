@@ -134,6 +134,28 @@ def read_state_flags(manifest_path):
         return None
 
 
+def is_steam_running():
+    """Return True if the Steam process is currently running."""
+    system = platform.system()
+    try:
+        if system == "Windows":
+            import subprocess as _sp
+            out = _sp.check_output(
+                ["tasklist", "/FI", "IMAGENAME eq steam.exe"],
+                stderr=_sp.DEVNULL
+            ).decode(errors="replace")
+            return "steam.exe" in out.lower()
+        else:
+            # macOS / Linux: use pgrep
+            result = subprocess.run(
+                ["pgrep", "-x", "steam" if system == "Linux" else "Steam"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            return result.returncode == 0
+    except Exception:
+        return False  # Can't tell — allow the run
+
+
 def trigger_verify(appid):
     uri = f"steam://validate/{appid}"
     system = platform.system()
@@ -694,6 +716,29 @@ class SteamVerifierApp:
                                 "No games are checked. Select at least one game.")
             return
 
+        # Bug fix #1 — validate spinbox values before proceeding
+        try:
+            delay_val = int(self.delay_var.get())
+            timeout_val = int(self.timeout_var.get())
+            if delay_val < 2 or timeout_val < 5:
+                raise ValueError
+        except (ValueError, tk.TclError):
+            messagebox.showerror(
+                "Invalid Settings",
+                "Startup delay must be a whole number ≥ 2 and "
+                "timeout must be a whole number ≥ 5."
+            )
+            return
+
+        # Bug fix #2 — check Steam is running before queuing anything
+        if not is_steam_running():
+            messagebox.showerror(
+                "Steam Not Running",
+                "Steam doesn't appear to be running.\n\n"
+                "Please launch Steam first, then click Verify again."
+            )
+            return
+
         for game in self.sorted_games:
             if not self.checked.get(game["appid"], True):
                 self._set_row_status(game["appid"], "\u2014 Skipped", "skipped", "")
@@ -764,11 +809,13 @@ class SteamVerifierApp:
                 time.sleep(2)
 
             if not verify_started:
-                elapsed = time.time() - game_start
-                self.verified_count += 1
+                # Bug fix #3 — StateFlags never changed after triggering.
+                # Steam is running (checked before queue started) but didn't
+                # begin verification — mark as failed rather than falsely
+                # reporting success.
+                self.failed_count += 1
                 self.root.after(0, self._set_row_status, appid,
-                                "\u2713 Complete", "verified",
-                                format_elapsed(elapsed))
+                                "\u26A0 Not started", "failed", "")
                 self.root.after(0, self._update_stats, total, i + 1, session_start)
                 continue
 

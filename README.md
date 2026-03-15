@@ -15,10 +15,12 @@ Steam only allows one game to be verified at a time. This tool automates the ted
 ## ✨ Features
 
 - **Truly sequential verification** — monitors each game's `appmanifest` StateFlags to wait for completion before starting the next
+- **Steam-running check** — warns you upfront if Steam isn't open, so no silent failures
 - **Per-game checkboxes** — click any row to include/exclude it; Select All, Deselect All, and Invert buttons
 - **Sortable columns** — click the Game or Size headers to sort A→Z, Z→A, or by size
 - **Live progress tracking** — per-game elapsed timer, overall progress bar, and stat cards (Total / Selected / Verified / Failed / Remaining / Elapsed)
 - **Configurable timeouts** — set a max wait per game so it doesn't hang forever on a problem title
+- **Input validation** — startup delay and timeout fields reject invalid values before the run begins
 - **Auto-detects Steam** — finds your Steam install and all library folders automatically; manual browse as fallback
 - **Steam-inspired dark theme** — easy on the eyes during long verification sessions
 - **Zero dependencies** — uses only Python's standard library (tkinter)
@@ -49,12 +51,14 @@ Steam only allows one game to be verified at a time. This tool automates the ted
 └────────────────────────────────────────────────────────────┘
 ```
 
+> 📷 **Real screenshot coming soon** — if you'd like to contribute one, see [Contributing](#-contributing)!
+
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - **Python 3.8+** (tkinter is included with most Python installations)
-- **Steam** must be running
+- **Steam** must be running before you click Verify
 
 ### Run It
 
@@ -69,28 +73,30 @@ python verify_steam_gui.py
 
 That's it. No `pip install`, no virtual env, no dependencies.
 
-### Windows Users
+### Windows shortcut
 
 If you have Python installed, you can also just double-click `verify_steam_gui.py`.
 
 ## 🎯 How to Use
 
-1. **Launch the app** — it auto-detects your Steam installation and lists all installed games
-2. **Uncheck games** you want to skip (click any row to toggle, or use the toolbar buttons)
-3. **Sort** by clicking the Game or Size column headers
-4. **Adjust settings** — startup delay (time before polling begins) and timeout (max wait per game)
-5. **Click "▶ Verify Selected"** and confirm
-6. **Watch progress** — each game shows its current status and elapsed time
-7. **Stop anytime** — the current game finishes its poll cycle, then the process halts
+1. **Launch Steam first** — the app will warn you if Steam isn't running
+2. **Launch the app** — it auto-detects your Steam installation and lists all installed games
+3. **Uncheck games** you want to skip (click any row to toggle, or use the toolbar buttons)
+4. **Sort** by clicking the Game or Size column headers
+5. **Adjust settings** — startup delay (time before polling begins) and timeout (max wait per game)
+6. **Click "▶ Verify Selected"** and confirm
+7. **Watch progress** — each game shows its current status and elapsed time
+8. **Stop anytime** — the current game finishes its poll cycle, then the process halts
 
 ## ⚙️ How It Works
 
 Unlike scripts that blast `steam://validate` URLs in rapid succession (which Steam ignores), this tool does it properly:
 
-1. **Trigger** — sends `steam://validate/{appid}` for one game
-2. **Detect start** — polls the game's `appmanifest_*.acf` file until `StateFlags` changes from `4` (fully installed) to another value
-3. **Wait for completion** — continues polling until `StateFlags` returns to `4`
-4. **Next game** — only then moves to the next title in the queue
+1. **Pre-flight check** — confirms Steam is running before starting the queue
+2. **Trigger** — sends `steam://validate/{appid}` for one game
+3. **Detect start** — polls the game's `appmanifest_*.acf` file until `StateFlags` changes from `4` (fully installed) to another value
+4. **Wait for completion** — continues polling until `StateFlags` returns to `4`
+5. **Next game** — only then moves to the next title in the queue
 
 This matches how Steam internally handles verification — one game at a time, sequentially.
 
@@ -119,22 +125,44 @@ steam-library-verifier/
 └── .gitignore
 ```
 
+## 🐛 Known Issues / Troubleshooting
+
+**"Steam Not Running" error even though Steam is open**
+> On some Linux setups the process name may differ. You can still proceed — the tool will attempt verification and flag any games that don't respond.
+
+**Game stays "Waiting for Steam..." for a long time**
+> Some large games take a while for Steam to register the verification request. Try increasing the Startup delay in the settings.
+
+**tkinter not found (Linux)**
+> Install it with: `sudo apt install python3-tk` (Debian/Ubuntu) or `sudo dnf install python3-tkinter` (Fedora).
+
 ## 🤝 Contributing
 
-Contributions are welcome! This is an open-source project and PRs are encouraged. Some ideas:
+Contributions are welcome! This is an open-source project and PRs are encouraged.
+
+### Ideas / Roadmap
 
 - [ ] Export verification report (CSV/JSON)
 - [ ] Remember excluded games between sessions
 - [ ] System tray mode for background operation
-- [ ] Notification when all games are done
+- [ ] Desktop notification when all games are done
 - [ ] Filter/search bar for large libraries
-- [ ] Packaging as a standalone `.exe` via PyInstaller
+- [ ] Package as a standalone `.exe` via PyInstaller (no Python install required)
+- [ ] Real screenshot in the README
+
+### How to contribute
+
+1. Fork the repo
+2. Create a branch: `git checkout -b feature/my-feature`
+3. Make your changes and commit: `git commit -m "feat: add my feature"`
+4. Push: `git push origin feature/my-feature`
+5. Open a Pull Request
 
 ## 🤖 Credits
 
-This project was built collaboratively by **Christopher** and **[Claude AI](https://claude.ai)** (by [Anthropic](https://www.anthropic.com)). The entire application — architecture, Steam integration logic, GUI design, and documentation — was developed through an iterative conversation between a human and an AI.
+This project was built collaboratively by **Christopher Maruri** and **[Claude AI](https://claude.ai)** (by [Anthropic](https://www.anthropic.com)). The entire application — architecture, Steam integration logic, GUI design, and documentation — was developed through an iterative conversation between a human and an AI.
 
-If you find this useful, consider starring the repo so others can find it too. The whole point was so nobody else has to burn tokens or time solving this same problem. 🙂
+If you find this useful, consider ⭐ **starring the repo** so others can find it too.
 
 ## 📄 License
 

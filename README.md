@@ -60,7 +60,7 @@ Steam only allows one game to be verified at a time. This tool automates the ted
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/steam-library-verifier.git
+git clone https://github.com/chrismaruri305/steam-library-verifier.git
 cd steam-library-verifier
 
 # Run
